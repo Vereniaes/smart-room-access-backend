@@ -4,7 +4,7 @@ import { integer, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  rfid_uid: varchar("rfid_uid", { length: 50 }).notNull().unique(),
+  rfid_uid: varchar("rfid_uid", { length: 255 }).notNull().unique(),
   role: varchar("role", { length: 50 }).notNull(),
   schedule_start: varchar("schedule_start", { length: 10 }).notNull(), // format HH:MM
   schedule_end: varchar("schedule_end", { length: 10 }).notNull(),     // format HH:MM
