@@ -137,6 +137,16 @@ Invoke-RestMethod -Uri http://localhost:5000/api/v1/users -Method Get -Headers @
 Invoke-RestMethod -Uri http://localhost:5000/api/v1/users/1 -Method Get -Headers @{Authorization="Bearer $token"}
 ```
 
+**(Update) - Ubah Data User ID 1:**
+```powershell
+Invoke-RestMethod -Uri http://localhost:5000/api/v1/users/1 -Method Put -Headers @{Authorization="Bearer $token"} -Body '{"name": "Budi Santoso", "role": "admin"}' -ContentType 'application/json'
+```
+
+**(Delete) - Hapus User ID 1:**
+```powershell
+Invoke-RestMethod -Uri http://localhost:5000/api/v1/users/1 -Method Delete -Headers @{Authorization="Bearer $token"}
+```
+
 #### 3. Test Access API (Simulasi Kartu Tap)
 ```powershell
 Invoke-RestMethod -Uri http://localhost:5000/api/v1/access -Method Post -Headers @{"X-API-KEY"="<API_KEY_ANDA>"} -Body '{"uid":"AABBCC","room":"Lab Jaringan"}' -ContentType 'application/json'
