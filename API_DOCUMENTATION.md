@@ -25,9 +25,11 @@ Digunakan oleh Dashboard untuk mendapatkan token akses.
 ```json
 {
   "username": "admin",
-  "password": "123"
+  "password": "your_password_from_db"
 }
 ```
+> [!NOTE]
+> Akun admin default adalah `username: admin` dan `password: admin123` (bisa dibuat melalui perintah seed).
 
 ### Response Success
 ```json
@@ -99,7 +101,7 @@ Endpoint berikut memerlukan **JWT Token** yang didapat dari Login API. Token dik
 
 #### 1. Login Admin
 ```bash
-http POST :5000/api/v1/auth/login username=admin password=123
+http POST :5000/api/v1/auth/login username=admin password=admin123
 ```
 *Salin nilai token yang muncul.*
 
@@ -117,14 +119,18 @@ http POST :5000/api/v1/access uid=A1B2C3 room=lab-iot X-API-KEY:<API_KEY>
 
 #### 1. Login
 ```powershell
-$auth = Invoke-RestMethod -Uri http://localhost:5000/api/v1/auth/login -Method Post -Body '{"username":"admin", "password":"123"}' -ContentType 'application/json'
+$auth = Invoke-RestMethod -Uri http://localhost:5000/api/v1/auth/login -Method Post -Body '{"username":"admin", "password":"admin123"}' -ContentType 'application/json'
 $token = $auth.data.token
 ```
 
 #### 2. Test User API (CRUD)
 **(Create) - Tambah User Baru:**
 ```powershell
+# User biasa (RFID saja)
 Invoke-RestMethod -Uri http://localhost:5000/api/v1/users -Method Post -Headers @{Authorization="Bearer $token"} -Body '{"name": "Budi", "rfid_uid": "AABBCC", "role": "student", "schedule_start": "08:00", "schedule_end": "16:00", "valid_until": "2026-12-31"}' -ContentType 'application/json'
+
+# User Admin/Staff (Punya akses Dashboard)
+Invoke-RestMethod -Uri http://localhost:5000/api/v1/users -Method Post -Headers @{Authorization="Bearer $token"} -Body '{"name": "Admin Lab", "rfid_uid": "CARD001", "username": "admin-lab", "password": "securepassword", "role": "staff", "schedule_start": "00:00", "schedule_end": "23:59"}' -ContentType 'application/json'
 ```
 
 **(Read) - Ambil Semua User:**
@@ -139,7 +145,7 @@ Invoke-RestMethod -Uri http://localhost:5000/api/v1/users/1 -Method Get -Headers
 
 **(Update) - Ubah Data User ID 1:**
 ```powershell
-Invoke-RestMethod -Uri http://localhost:5000/api/v1/users/1 -Method Put -Headers @{Authorization="Bearer $token"} -Body '{"name": "Budi Santoso", "role": "admin"}' -ContentType 'application/json'
+Invoke-RestMethod -Uri http://localhost:5000/api/v1/users/1 -Method Put -Headers @{Authorization="Bearer $token"} -Body '{"name": "Budi Santoso", "role": "admin", "password": "newpassword123"}' -ContentType 'application/json'
 ```
 
 **(Delete) - Hapus User ID 1:**
@@ -161,4 +167,6 @@ Invoke-RestMethod -Uri http://localhost:5000/api/v1/logs -Method Get -Headers @{
 
 ## Cara Menjalankan Server
 1. `npm install`
-2. `npm run dev`
+2. `npx drizzle-kit push` (Pastikan DB Neon siap)
+3. `npm run db:seed` (Untuk membuat akun admin awal)
+4. `npm run dev`

@@ -83,7 +83,12 @@ Jika Anda ingin menjalankan atau mengembangkan kode (kolaborasi) secara lokal:
    npx drizzle-kit push
    ```
 
-5. **Nyalakan Mesin Server!**
+5. **Buat Akun Admin Pertama (Seeding)**
+   ```bash
+   npm run db:seed
+   ```
+
+6. **Nyalakan Mesin Server!**
    ```bash
    npm run dev
    ```

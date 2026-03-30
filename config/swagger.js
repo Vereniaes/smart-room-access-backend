@@ -38,7 +38,7 @@ const options = {
           required: ["username", "password"],
           properties: {
             username: { type: "string", example: "admin" },
-            password: { type: "string", example: "123" },
+            password: { type: "string", example: "admin123" },
           },
         },
         AccessRequest: {
@@ -69,7 +69,13 @@ const options = {
           properties: {
             name: { type: "string", example: "Budi" },
             rfid_uid: { type: "string", example: "AABBCC" },
-            role: { type: "string", example: "student" },
+            username: { type: "string", example: "budi_admin", description: "Optional for dashboard access" },
+            password: { type: "string", example: "securepass123", description: "Optional for dashboard access" },
+            role: { 
+              type: "string", 
+              enum: ["admin", "staff", "student", "guest"],
+              example: "student" 
+            },
             schedule_start: {
               type: "string",
               example: "08:00",
@@ -94,8 +100,13 @@ const options = {
           properties: {
             id: { type: "integer", example: 1 },
             name: { type: "string", example: "Budi" },
+            username: { type: "string", example: "budi_admin", nullable: true },
             rfid_uid: { type: "string", example: "AABBCC" },
-            role: { type: "string", example: "student" },
+            role: { 
+              type: "string", 
+              enum: ["admin", "staff", "student", "guest"],
+              example: "student" 
+            },
             schedule_start: { type: "string", example: "08:00" },
             schedule_end: { type: "string", example: "16:00" },
             valid_until: { type: "string", example: "2026-12-31" },
