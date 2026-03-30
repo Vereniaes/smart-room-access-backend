@@ -1,5 +1,5 @@
 import { eq, desc } from 'drizzle-orm';
-import { db } from '../database/db.js';
+import { db } from '../database/sql.js';
 import { accessLogs } from '../database/schema.js';
 
 export const getAllLogs = async () => {

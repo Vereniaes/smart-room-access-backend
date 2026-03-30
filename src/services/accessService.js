@@ -1,4 +1,4 @@
-import { db } from '../database/db.js';
+import { db } from '../database/sql.js';
 import { accessLogs } from '../database/schema.js';
 import { sendNotification } from './notificationService.js';
 import { getDataAllUsers } from './userService.js';
@@ -54,14 +54,14 @@ export const validateAccess = async (uid, room) => {
 };
 
 // Fungsi internal untuk mecetak log kini wajib menerima param 'message'
-const logAccess = async (userId, uid, status, room, message) => { 
+const logAccess = async (userId, uid, status, room, message) => {
     try {
         await db.insert(accessLogs).values({
             user_id: userId || null,
             uid: uid,
             status: status,
             room: room,
-            message: message 
+            message: message
         });
     } catch (error) {
         console.error("Gagal menambahkan log akses:", error);

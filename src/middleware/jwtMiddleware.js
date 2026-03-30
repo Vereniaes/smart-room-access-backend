@@ -5,7 +5,6 @@ import { sendError } from "../utils/response.js";
 export const verifyJwt = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     
-    // Pastikan header Authorization ada dan berformat "Bearer <token>"
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return sendError(res, 401, "Unauthorized: No token provided or invalid format");
     }

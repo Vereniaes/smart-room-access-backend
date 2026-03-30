@@ -17,7 +17,6 @@ export const sendNotification = async (user, room, status, accessTypeMessage = "
 
     const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-    // accessTypeMessage can provide more context like 'Di luar jadwal' or 'RFID tidak terdaftar'
     const message = `
 Access Notification
 User: ${user ? user.name : 'Unknown User'}
