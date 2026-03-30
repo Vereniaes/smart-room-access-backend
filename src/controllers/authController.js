@@ -1,22 +1,19 @@
-import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../../config/env.js";
 import { sendResponse, sendError } from "../utils/response.js";
+import { loginUser } from "../services/authService.js";
 
 export const login = async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // Simulasi Akun Admin
-        if (username === "admin" && password === "123") {
-            const payload = { username, role: "admin" };
-            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+        const token = await loginUser(username, password);
 
-            // Urutan: res, statusCode, data, message
-            return sendResponse(res, 200, { token }, "Login successfully");
-        }
-
-        return sendError(res, 401, "Invalid username or password");
+        return sendResponse(res, 200, { token }, "Login successfully");
     } catch (error) {
+        if (error.status) {
+            return sendError(res, error.status, error.message);
+        }
+        
+        console.error("Login Error:", error);
         return sendError(res, 500, "Internal server error");
     }
 };
