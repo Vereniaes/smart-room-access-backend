@@ -1,11 +1,19 @@
-import { integer, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { text } from "drizzle-orm/gel-core";
+import { integer, pgTable, serial, pgEnum, timestamp, varchar } from "drizzle-orm/pg-core";
+
+export const roleEnum = pgEnum('user_role', ['admin', 'staff', 'student', 'guest'])
 
 // Tabel Users
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+
+  // dashboard credential
+  username: varchar("username", { length: 100 }).unique(),
+  password: text("password"),
+
   rfid_uid: varchar("rfid_uid", { length: 255 }).notNull().unique(),
-  role: varchar("role", { length: 50 }).notNull(),
+  role: roleEnum("role").default("guest").notNull(),
   schedule_start: varchar("schedule_start", { length: 10 }).notNull(), // format HH:MM
   schedule_end: varchar("schedule_end", { length: 10 }).notNull(),     // format HH:MM
   valid_until: varchar("valid_until", { length: 50 }), // Tanggal / waktu kadaluarsa

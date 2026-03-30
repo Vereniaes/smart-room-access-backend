@@ -1,4 +1,4 @@
-import { db as drizzleDb } from '../database/db.js';
+import { db as drizzleDb } from '../database/sql.js';
 import { eq } from 'drizzle-orm';
 import { users } from '../database/schema.js';
 import bcrypt from 'bcryptjs';
@@ -26,7 +26,7 @@ export const getDataUserById = async (id) => {
 
 export const getDataUserByUid = async (uid) => {
     try {
-        // Ingat, nama kolom di schema adalah rfid_uid, bukan uid
+        // nama kolom di schema adalah rfid_uid, bukan uid
         const result = await drizzleDb.select().from(users).where(eq(users.rfid_uid, uid));
         return result[0] || null;
     } catch (error) {
@@ -62,7 +62,7 @@ export const createDataUser = async (userData) => {
         return result[0];
     } catch (error) {
         if (error.code !== "DUPLICATE_UID") {
-           console.error("Failed to create user", error);
+            console.error("Failed to create user", error);
         }
         throw error;
     }
@@ -96,7 +96,7 @@ export const deleteDataUser = async (id) => {
             .where(eq(users.id, parseInt(id)))
             .returning();
         return result.length > 0;
-    } catch (error) {   
+    } catch (error) {
         console.error("Failed to delete user", error);
         throw error;
     }
