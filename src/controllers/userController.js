@@ -3,8 +3,8 @@ import { getDataAllUsers, getDataUserById, getDataUserByUid, createDataUser, upd
 
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await getDataAllUsers();
-        return sendResponse(res, 200, users, "Users retrieved successfully");
+        const usersData = await getDataAllUsers();
+        return sendResponse(res, 200, { users: usersData }, "Users retrieved successfully");
     } catch (error) {
         return sendError(res, 500, "Internal server error");
     }
@@ -12,11 +12,11 @@ export const getAllUsers = async (req, res) => {
 
 export const getUserById = async (req, res) => {
     try {
-        const user = await getDataUserById(req.params.id);
-        if (!user) {
+        const userData = await getDataUserById(req.params.id);
+        if (!userData) {
             return sendError(res, 404, "User not found");
         }
-        return sendResponse(res, 200, user, "User retrieved successfully");
+        return sendResponse(res, 200, { user: userData }, "User retrieved successfully");
     } catch (error) {
         return sendError(res, 500, "Internal server error");
     }
@@ -24,11 +24,11 @@ export const getUserById = async (req, res) => {
 
 export const getUserByUid = async (req, res) => {
     try {
-        const user = await getDataUserByUid(req.params.uid);
-        if (!user) {
+        const userData = await getDataUserByUid(req.params.uid);
+        if (!userData) {
             return sendError(res, 404, "User not found");
         }
-        return sendResponse(res, 200, user, "User retrieved successfully");
+        return sendResponse(res, 200, { user: userData }, "User retrieved successfully");
     } catch (error) {
         return sendError(res, 500, "Internal server error");
     }
@@ -36,8 +36,8 @@ export const getUserByUid = async (req, res) => {
 
 export const createUser = async (req, res) => {
     try {
-        const newUser = await createDataUser(req.body);
-        return sendResponse(res, 201, newUser, "User created successfully");
+        const newUserData = await createDataUser(req.body);
+        return sendResponse(res, 201, { user: newUserData }, "User created successfully");
     } catch (error) {
         if (error.code === "DUPLICATE_UID") {
             return sendError(res, 409, "RFID UID is already registered to another user");
@@ -48,11 +48,11 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
     try {
-        const updated = await updateDataUser(req.params.id, req.body);
-        if (!updated) {
+        const updatedUserData = await updateDataUser(req.params.id, req.body);
+        if (!updatedUserData) {
             return sendError(res, 404, "User not found");
         }
-        return sendResponse(res, 200, updated, "User updated successfully");
+        return sendResponse(res, 200, { user: updatedUserData }, "User updated successfully");
     } catch (error) {
         return sendError(res, 500, "Internal server error");
     }
@@ -60,11 +60,11 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     try {
-        const success = await deleteDataUser(req.params.id);
-        if (!success) {
+        const deletedUserData = await deleteDataUser(req.params.id);
+        if (!deletedUserData) {
             return sendError(res, 404, "User not found");
         }
-        return sendResponse(res, 200, null, "User deleted successfully");
+        return sendResponse(res, 200, { user: deletedUserData }, "User deleted successfully");
     } catch (error) {
         return sendError(res, 500, "Internal server error");
     }

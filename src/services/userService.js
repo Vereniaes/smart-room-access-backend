@@ -95,7 +95,7 @@ export const deleteDataUser = async (id) => {
         const result = await drizzleDb.delete(users)
             .where(eq(users.id, parseInt(id)))
             .returning();
-        return result.length > 0;
+        return result[0] || null;
     } catch (error) {
         console.error("Failed to delete user", error);
         throw error;
