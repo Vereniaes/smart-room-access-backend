@@ -6,12 +6,20 @@ import { NODE_ENV, PORT } from "./config/env.js";
 import apiRoutes from "./src/routes/index.js";
 import { errorHandler } from "./src/middleware/errorHandler.js";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 
 const app = express();
+// {
+//     origin: NODE_ENV === "production"
+//         ? "https://your-dashboard-domain.com"  // Ganti dengan domain dashboard Anda
+//         : "http://localhost:5173",             // Default Vite dev server
+//     credentials: true,                         // Wajib agar browser kirim/terima cookie
+// }
 
 app.use(cors());
 app.use(express.json());
-app.use(morgan("dev"))
+app.use(cookieParser());
+app.use(morgan("dev"));
 
 // Swagger API Docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   // dashboard credential
   username: varchar("username", { length: 100 }).unique(),
   password: text("password"),
+  refresh_token: text("refresh_token"),
 
   rfid_uid: varchar("rfid_uid", { length: 255 }).notNull().unique(),
   role: roleEnum("role").default("guest").notNull(),

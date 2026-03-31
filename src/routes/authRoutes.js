@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { login } from "../controllers/authController.js";
+import { login, handleRefreshToken, logout } from "../controllers/authController.js";
+import { verifyJwt } from "../middleware/jwtMiddleware.js";
 
 const router = Router();
 
@@ -52,4 +53,30 @@ const router = Router();
  */
 router.post("/login", login);
 
+/**
+ * @openapi
+ * /api/v1/auth/refresh:
+ *   get:
+ *     tags:
+ *       - Authentication
+ *     summary: Refresh access token
+ *     description: Uses the refresh token from cookies to issue a new access token.
+ *     responses:
+ *       200:
+ *         description: Token refreshed.
+ */
+router.get("/refresh-token", handleRefreshToken);
+
+/**
+ * @openapi
+ * /api/v1/auth/logout:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Logout user
+ *     description: Clears the refresh token from the database and removes the cookie.
+ *     security:
+ *       - BearerAuth: []
+ */
+router.post("/logout", verifyJwt, logout);
 export default router;
