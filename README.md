@@ -1,3 +1,5 @@
+https://smart-room-access-backend-196827089960.asia-southeast2.run.app/api-docs/
+
 # Smart Room Access - Backend API
 
 Proyek ini adalah sistem backend RESTful API untuk ekosistem "Smart Room Access". Sistem ini dirancang untuk memvalidasi akses secara _real-time_ berbasis RFID (misal menggunakan mikrokontroler ESP32) serta menyediakan dasbor admin untuk manajemen pengguna dan pemantauan riwayat akses ruangan.
