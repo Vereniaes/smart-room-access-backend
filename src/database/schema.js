@@ -31,4 +31,5 @@ export const accessLogs = pgTable("access_logs", {
   status: varchar("status", { length: 20 }).notNull(), // "allowed" atau "denied"
   room: varchar("room", { length: 100 }).notNull(),
   message: varchar("message", { length: 255 }),
+  photo_url: text("photo_url"),  // GCS public URL foto saat tap
 });
