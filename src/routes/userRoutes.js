@@ -276,8 +276,9 @@ router.post('/', createUser);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+// Prefer explicit uid route to avoid parameter collision with numeric `:id`
+router.get('/uid/:uid', getUserByUid);
 router.get('/:id', getUserById);
-router.get('/:uid', getUserByUid);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 

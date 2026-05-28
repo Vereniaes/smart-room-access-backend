@@ -31,3 +31,5 @@ Time: ${time}
         console.error("Failed to send telegram notification", error);
     }
 };
+
+bot.on

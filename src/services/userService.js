@@ -74,13 +74,32 @@ export const updateDataUser = async (id, updateData) => {
         if (hashedUid) {
             hashedUid = await bcrypt.hash(hashedUid, SALT_ROUNDS);
         }
+        // Only allow specific fields to be updated to avoid passing
+        // timestamp or other non-column-friendly values (e.g. created_at)
+        const allowedFields = [
+            'name',
+            'username',
+            'role',
+            'schedule_start',
+            'schedule_end',
+            'valid_until'
+        ];
+
+        const setObj = {};
+        for (const key of allowedFields) {
+            if (Object.prototype.hasOwnProperty.call(updateData, key)) {
+                setObj[key] = updateData[key];
+            }
+        }
+
+        if (hashedUid) {
+            setObj.rfid_uid = hashedUid;
+        }
+
+        setObj.updated_at = new Date();
 
         const result = await drizzleDb.update(users)
-            .set({
-                ...updateData,
-                ...(hashedUid && { rfid_uid: hashedUid }),
-                updated_at: new Date()
-            })
+            .set(setObj)
             .where(eq(users.id, parseInt(id)))
             .returning();
         return result[0] || null;
