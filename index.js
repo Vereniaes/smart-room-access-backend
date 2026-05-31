@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser'
 import http from 'http'
 import { Server } from 'socket.io'
 import { setIO } from './src/utils/socketServer.js'
+import './src/services/botService.js'
 
 const app = express()
 
