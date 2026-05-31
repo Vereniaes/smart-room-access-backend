@@ -66,3 +66,6 @@ io.on('connection', (socket) => {
 server.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${port} in ${NODE_ENV} mode`)
 })
+
+
+export default app

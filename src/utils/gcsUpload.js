@@ -1,7 +1,9 @@
 import { Storage } from '@google-cloud/storage';
 import { GCP_BUCKET_NAME } from '../../config/env.js';
 
-const storage = new Storage();  // Uses Application Default Credentials (Cloud Run auto-auth)
+const storage = process.env.GCP_CREDENTIALS
+    ? new Storage({ credentials: JSON.parse(process.env.GCP_CREDENTIALS) })
+    : new Storage(); // Uses Application Default Credentials (Cloud Run auto-auth)
 const bucket = storage.bucket(GCP_BUCKET_NAME);
 
 /**
