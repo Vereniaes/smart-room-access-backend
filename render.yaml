@@ -23,7 +23,9 @@ services:
         sync: false
       - key: REFRESH_TOKEN_SECRET
         sync: false
-      - key: GCP_BUCKET_NAME
+      - key: CLOUDINARY_CLOUD_NAME
         sync: false
-      - key: GCP_CREDENTIALS
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false
