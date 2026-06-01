@@ -2,7 +2,7 @@ import { db } from '../database/sql.js';
 import { accessLogs } from '../database/schema.js';
 import { sendNotification } from './botService.js';
 import { getDataAllUsers } from './userService.js';
-import { uploadToGcs } from '../utils/gcsUpload.js';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
 import bcrypt from 'bcryptjs';
 import { emitAccessEvent } from '../utils/socketServer.js';
 
@@ -13,7 +13,6 @@ import { emitAccessEvent } from '../utils/socketServer.js';
  * @param {Buffer|null} photoBuffer - JPEG photo buffer from ESP32 (optional)
  */
 export const validateAccess = async (uid, room, photoBuffer = null) => {
-    // 1. Cek User Terdaftar (Menggunakan Bcrypt)
     const allUsers = await getDataAllUsers();
     let user = null;
 
@@ -25,38 +24,32 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
         }
     }
 
-    // Upload foto ke GCS (async, tidak blokir validasi)
+    const nowWIB = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+    const today = nowWIB.toISOString().split('T')[0];
+    const currentTime = nowWIB.toTimeString().slice(0, 5);
+
     let photoUrl = null;
     if (photoBuffer) {
         try {
-            photoUrl = await uploadToGcs(photoBuffer, uid);
+            photoUrl = await uploadToCloudinary(photoBuffer, uid);
         } catch (err) {
-            console.error('[GCS] Upload failed:', err.message);
-            // Tidak gagalkan request jika GCS error
+            console.error('[Cloudinary] Upload failed:', err.message);
         }
     }
 
     if (!user) {
-        const msg = 'RFID tidak terdaftar di sistem';
-        await logAccess(null, uid, 'denied', room, msg, photoUrl);
-        await sendNotification(null, room, 'denied', msg);
-        return { status: 'denied', message: msg };
+        const msg = "RFID tidak terdaftar di sistem"
+        await logAccess(null, uid, 'denied', room, msg, photoUrl)
+        await sendNotification(null, room, "denied", msg)
+        return { status: "denied", message: msg }
     }
 
-    // Gunakan waktu WIB (UTC+7) — Cloud Run berjalan di UTC
-    const nowWIB = new Date(Date.now() + 7 * 60 * 60 * 1000);
-    const today = nowWIB.toISOString().split('T')[0];
-
-    // 2. Cek Masa Berlaku Kartu
-    if (user.valid_until && today > user.valid_until) {
-        const msg = 'Kartu RFID telah kadaluarsa';
-        await logAccess(user, uid, 'denied', room, msg, photoUrl);
-        await sendNotification(user, room, 'denied', msg);
-        return { status: 'denied', message: msg };
+    if (user.validate_until && today > user.validate_until) {
+        const msg = "Kartu RFID telah kadaluarsa"
+        await logAccess(user, uid, 'denied', room, msg, photoUrl)
+        await sendNotification(user, room, "denied", msg)
+        return { status: "denied", message: msg }
     }
-
-    // 3. Cek Jadwal Akses (pakai WIB UTC+7)
-    const currentTime = nowWIB.toISOString().slice(11, 16); // HH:MM in WIB
 
     if (currentTime < user.schedule_start || currentTime > user.schedule_end) {
         const msg = 'Akses ditolak di luar jadwal operasional';
@@ -65,7 +58,6 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
         return { status: 'denied', message: msg };
     }
 
-    // 4. Akses Diizinkan
     const msg = 'Akses berhasil diberikan';
     await logAccess(user, uid, 'allowed', room, msg, photoUrl);
     await sendNotification(user, room, 'allowed', msg);
