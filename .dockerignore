@@ -1,11 +1,28 @@
+# dependencies
 node_modules
-npm-debug.log
+
+# env
 .env
 .env.*
+
+# git
 .git
 .gitignore
+
+# docker
 .dockerignore
 Dockerfile
+
+# docs & config
 README.md
 API_DOCUMENTATION.md
 drizzle.config.js
+migrations
+
+# ml-service - punya Dockerfile sendiri, tidak masuk image Node.js
+ml-service
+
+# python cache (kalau ada)
+__pycache__
+*.pyc
+*.pyo

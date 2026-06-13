@@ -22,7 +22,7 @@ export const login = async (req, res) => {
             return sendError(res, error.status, error.message);
         }
         console.error("Login Error:", error);
-        return sendError(res, 500, "Internal server error");
+        return sendError(res, 500, `Internal server error: ${error.message}`);
     }
 };
 
@@ -40,7 +40,7 @@ export const handleRefreshToken = async (req, res) => {
         if (error.status) {
             return sendError(res, error.status, error.message);
         }
-        return sendError(res, 500, "Internal server error");
+        return sendError(res, 500, `Internal server error: ${error.message}`);
     }
 };
 
@@ -62,6 +62,6 @@ export const logout = async (req, res) => {
         });
         return sendResponse(res, 200, {user: userData}, "Logout successfully");
     } catch (error) {
-        return sendError(res, 500, "Logout failed");
+        return sendError(res, 500, `Logout failed: ${error.message}`);
     }
 };

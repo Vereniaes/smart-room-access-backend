@@ -6,7 +6,7 @@ export const getAllUsers = async (req, res) => {
         const usersData = await getDataAllUsers();
         return sendResponse(res, 200, { users: usersData }, "Users retrieved successfully");
     } catch (error) {
-        return sendError(res, 500, "Internal server error");
+        return sendError(res, 500, `Internal server error: ${error.message}`);
     }
 };
 
@@ -18,7 +18,7 @@ export const getUserById = async (req, res) => {
         }
         return sendResponse(res, 200, { user: userData }, "User retrieved successfully");
     } catch (error) {
-        return sendError(res, 500, "Internal server error");
+        return sendError(res, 500, `Internal server error: ${error.message}`);
     }
 };
 
@@ -30,7 +30,7 @@ export const getUserByUid = async (req, res) => {
         }
         return sendResponse(res, 200, { user: userData }, "User retrieved successfully");
     } catch (error) {
-        return sendError(res, 500, "Internal server error");
+        return sendError(res, 500, `Internal server error: ${error.message}`);
     }
 };
 
@@ -42,7 +42,7 @@ export const createUser = async (req, res) => {
         if (error.code === "DUPLICATE_UID") {
             return sendError(res, 409, "RFID UID is already registered to another user");
         }
-        return sendError(res, 500, "Internal server error");
+        return sendError(res, 500, `Internal server error: ${error.message}`);
     }
 };
 
@@ -54,7 +54,7 @@ export const updateUser = async (req, res) => {
         }
         return sendResponse(res, 200, { user: updatedUserData }, "User updated successfully");
     } catch (error) {
-        return sendError(res, 500, "Internal server error");
+        return sendError(res, 500, `Internal server error: ${error.message}`);
     }
 };
 
@@ -66,6 +66,6 @@ export const deleteUser = async (req, res) => {
         }
         return sendResponse(res, 200, { user: deletedUserData }, "User deleted successfully");
     } catch (error) {
-        return sendError(res, 500, "Internal server error");
+        return sendError(res, 500, `Internal server error: ${error.message}`);
     }
 };
