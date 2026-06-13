@@ -15,9 +15,7 @@ import { accessLogs }   from '../database/schema.js';
 import { sendNotification }  from './notificationService.js';
 import { getDataUserByRfid } from './userService.js';
 import { uploadToGcs }       from '../utils/gcsUpload.js';
-import { ML_SERVICE_URL }    from '../../config/env.js';
-
-const ML_BASE           = ML_SERVICE_URL || 'http://localhost:8001';
+import { inferFace }         from './faceService.js';
 const FACE_MATCH_THRESHOLD = 0.40;
 
 // helper ---------------------------------------------------------------------------------
@@ -45,29 +43,7 @@ const logAccess = async (userId, uid, status, room, message, photoUrl = null) =>
 };
 
 
-// fungsi call ML service untuk inference wajah dari photo buffer
-// input param : photoBuffer -> Buffer JPEG dari ESP32-CAM
-// output : { matched: bool, person_name: str, similarity: float } atau null jika ML error
-// note   : error ML service tidak crash akses - di-handle gracefully
-const callFaceInference = async (photoBuffer) => {
-    try {
-        const form = new FormData();
-        form.append('photo', photoBuffer, {
-            filename:    'capture.jpg',
-            contentType: 'image/jpeg',
-        });
-
-        const response = await axios.post(`${ML_BASE}/face/inference`, form, {
-            headers: form.getHeaders(),
-            timeout: 10000,   // 10 detik timeout untuk inference
-        });
-
-        return response.data?.data || null;
-    } catch (err) {
-        console.error('[face inference] ML service error:', err.message);
-        return null;  // null = ML tidak bisa dihubungi, treated sebagai "skip face check"
-    }
-};
+// tidak perlu callFaceInference manual karena sudah pakai inferFace dari faceService.js
 
 // end of helper --------------------------------------------------------------------------
 
@@ -129,7 +105,15 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
         );
 
         // face inference: sync - perlu hasil untuk keputusan akses
-        faceResult = await callFaceInference(photoBuffer);
+        // photoBuffer perlu dikonversi jadi bentuk file object seperti dari req.file
+        const photoFile = { buffer: photoBuffer, fieldname: 'photo', originalname: 'capture.jpg', mimetype: 'image/jpeg' };
+        
+        try {
+            faceResult = await inferFace(photoFile);
+        } catch(err) {
+            console.error('[face inference] Error:', err.message);
+            faceResult = null;
+        }
 
         if (faceResult === null) {
             // ML service tidak bisa dihubungi - tolak akses karena face check wajib jika photo ada

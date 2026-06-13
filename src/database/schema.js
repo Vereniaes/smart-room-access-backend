@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, pgEnum, timestamp, varchar, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, pgEnum, timestamp, varchar, text, uniqueIndex, customType } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum('user_role', ['admin', 'staff', 'student', 'guest'])
 
@@ -35,15 +35,35 @@ export const accessLogs = pgTable("access_logs", {
   photo_url: text("photo_url"),  // GCS public URL foto saat tap
 });
 
+// Custom type untuk pgvector
+const vectorType = customType({
+  dataType() {
+    return 'vector(512)';
+  },
+  toDriver(value) {
+    return JSON.stringify(value);
+  },
+  fromDriver(value) {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value;
+      }
+    }
+    return value;
+  }
+});
+
 // Tabel Face Embeddings
 // - menyimpan 512-dim embedding dari InsightFace pipeline (w600k_r50.onnx)
 // - satu orang bisa punya sampai 3 embedding (1 per foto registrasi)
-// - embedding disimpan sebagai JSON string array 512 float32
+// - menggunakan pgvector untuk similarity search
 export const faceEmbeddings = pgTable("face_embeddings", {
   id: serial("id").primaryKey(),
   person_name: varchar("person_name", { length: 255 }).notNull(),          // nama orang yang didaftarkan
   user_id: integer("user_id").references(() => users.id, { onDelete: 'set null' }), // optional link ke users
-  embedding: text("embedding").notNull(),                                   // JSON array 512-dim float32
+  embedding: vectorType("embedding").notNull(),                              // vector(512)
   photo_index: integer("photo_index").notNull(),                            // urutan foto: 1, 2, atau 3
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
