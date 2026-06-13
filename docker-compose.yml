@@ -35,8 +35,8 @@ services:
   # ─────────────────────────────────────────────
   ml-service:
     build:
-      context: ..                          # root repo (akses ml-models/)
-      dockerfile: smart-room-access-backend/ml-service/Dockerfile
+      context: ../../ml-service-iot-room
+      dockerfile: Dockerfile
       args:
         GCS_BUCKET: ml-models-iot
     ports:
@@ -45,7 +45,7 @@ services:
       PORT: 8001
       MODEL_DIR: /app/models
     env_file:
-      - ml-service/.env
+      - ../../ml-service-iot-room/.env
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]

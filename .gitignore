@@ -31,9 +31,7 @@ test.md
 .agents/
 skills-lock.json
 
-# Python (ml-service)
+# Python (kalau ada)
 __pycache__/
 *.py[cod]
 *.pyo
-ml-service/venv/
-ml-service/.env

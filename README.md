@@ -60,15 +60,7 @@ smart-room-access-backend/
 │   └── utils/
 │       ├── response.js          # sendResponse, sendError helper
 │       └── gcsUpload.js         # upload foto ke GCP Cloud Storage
-├── ml-service/                  # Python FastAPI - face recognition
-│   ├── main.py                  # entry point uvicorn
-│   ├── requirements.txt         # python dependencies
-│   ├── .env.example
-│   └── app/
-│       ├── models/face_pipeline.py    # InsightFace ONNX wrapper
-│       ├── services/face_service.py   # business logic register + inference
-│       ├── routes/face.py             # FastAPI router
-│       └── database/connection.py     # psycopg2 connection
+
 └── migrations/                  # file SQL migration Drizzle
 ```
 

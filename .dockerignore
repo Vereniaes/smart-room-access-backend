@@ -19,8 +19,6 @@ API_DOCUMENTATION.md
 drizzle.config.js
 migrations
 
-# ml-service - punya Dockerfile sendiri, tidak masuk image Node.js
-ml-service
 
 # python cache (kalau ada)
 __pycache__
