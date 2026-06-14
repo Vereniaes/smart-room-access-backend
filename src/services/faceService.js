@@ -11,6 +11,7 @@ import { eq, sql, desc } from 'drizzle-orm';
 import { db } from '../database/sql.js';
 import { faceEmbeddings, users } from '../database/schema.js';
 import { ML_SERVICE_URL } from '../../config/env.js';
+import { uploadToGcs } from '../utils/gcsUpload.js';
 
 const ML_BASE = ML_SERVICE_URL || 'http://localhost:8001';
 
@@ -43,7 +44,7 @@ async function forwardMultipart(files, fields, path) {
 
 // ------------------------------------------------------------------------------------------
 
-// Register Face: panggil ML API, simpan embedding ke database
+// Register Face: panggil ML API, simpan embedding ke database beserta GCS public URL
 export async function registerFace(personName, userId, photoFiles) {
     // panggil ML service untuk mendapatkan 3 array embedding
     const mlResponse = await forwardMultipart(
@@ -55,13 +56,24 @@ export async function registerFace(personName, userId, photoFiles) {
     const data = mlResponse.data;
     const embeddings = data.embeddings;
 
-    // simpan ke database
+    // simpan ke database beserta URL GCS
     for (let i = 0; i < embeddings.length; i++) {
+        let photoUrl = null;
+        if (photoFiles[i] && photoFiles[i].buffer) {
+            try {
+                const identifier = `${personName.replace(/\s+/g, '_')}_reg_${i + 1}`;
+                photoUrl = await uploadToGcs(photoFiles[i].buffer, identifier);
+            } catch (err) {
+                console.error(`[GCS] Gagal mengunggah foto registrasi ke-${i + 1}:`, err.message);
+            }
+        }
+
         await db.insert(faceEmbeddings).values({
             person_name: personName,
             user_id: userId || null,
             embedding: embeddings[i],
             photo_index: i + 1,
+            photo_url: photoUrl,
         });
     }
 

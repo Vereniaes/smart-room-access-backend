@@ -1,7 +1,20 @@
 import { Storage } from '@google-cloud/storage';
-import { GCP_BUCKET_NAME } from '../../config/env.js';
+import { GCP_BUCKET_NAME, GCP_CREDENTIALS } from '../../config/env.js';
 
-const storage = new Storage();  // Uses Application Default Credentials (Cloud Run auto-auth)
+const storageOptions = {};
+if (GCP_CREDENTIALS) {
+    if (GCP_CREDENTIALS.trim().startsWith('{')) {
+        try {
+            storageOptions.credentials = JSON.parse(GCP_CREDENTIALS);
+        } catch (err) {
+            console.error('[GCS] Failed to parse GCP_CREDENTIALS JSON string:', err.message);
+        }
+    } else {
+        storageOptions.keyFilename = GCP_CREDENTIALS;
+    }
+}
+
+const storage = new Storage(storageOptions);
 const bucket = storage.bucket(GCP_BUCKET_NAME);
 
 /**

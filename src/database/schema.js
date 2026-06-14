@@ -2,6 +2,15 @@ import { integer, pgTable, serial, pgEnum, timestamp, varchar, text, uniqueIndex
 
 export const roleEnum = pgEnum('user_role', ['admin', 'staff', 'student', 'guest'])
 
+// Tabel Cards (Baru)
+export const cards = pgTable("cards", {
+  id: serial("id").primaryKey(),
+  rfid_uid: varchar("rfid_uid", { length: 64 }).notNull().unique(), // HMAC-SHA256 hex (64 chars)
+  card_no: varchar("card_no", { length: 50 }).notNull(),            // Plaintext RFID UID (untuk UI)
+  valid_until: varchar("valid_until", { length: 50 }),              // Tanggal / waktu kadaluarsa / blokir
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Tabel Users
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -12,7 +21,7 @@ export const users = pgTable("users", {
   password: text("password"),
   refresh_token: text("refresh_token"),
 
-  rfid_uid: varchar("rfid_uid", { length: 64 }).notNull().unique(),  // HMAC-SHA256 hex (64 chars)
+  rfid_uid: varchar("rfid_uid", { length: 64 }).unique(),  // HMAC-SHA256 hex (64 chars), nullable
   role: roleEnum("role").default("guest").notNull(),
   schedule_start: varchar("schedule_start", { length: 10 }).notNull(), // format HH:MM
   schedule_end: varchar("schedule_end", { length: 10 }).notNull(),     // format HH:MM
@@ -65,5 +74,6 @@ export const faceEmbeddings = pgTable("face_embeddings", {
   user_id: integer("user_id").references(() => users.id, { onDelete: 'set null' }), // optional link ke users
   embedding: vectorType("embedding").notNull(),                              // vector(512)
   photo_index: integer("photo_index").notNull(),                            // urutan foto: 1, 2, atau 3
+  photo_url: text("photo_url"),                                              // GCS public URL foto registrasi
   created_at: timestamp("created_at").defaultNow().notNull(),
 });

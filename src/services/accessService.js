@@ -8,12 +8,14 @@
 //    -> keduanya run paralel setelah RFID ditemukan
 // -> GCS upload : async fire-and-forget, tidak blokir response
 
+import { eq }           from 'drizzle-orm';
 import axios            from 'axios';
 import FormData         from 'form-data';
 import { db }           from '../database/sql.js';
-import { accessLogs }   from '../database/schema.js';
+import { users, accessLogs, faceEmbeddings } from '../database/schema.js';
 import { sendNotification }  from './notificationService.js';
 import { getDataUserByRfid } from './userService.js';
+import { getDataCardByRfid } from './cardService.js';
 import { uploadToGcs }       from '../utils/gcsUpload.js';
 import { inferFace }         from './faceService.js';
 const FACE_MATCH_THRESHOLD = 0.40;
@@ -53,22 +55,12 @@ const logAccess = async (userId, uid, status, room, message, photoUrl = null) =>
 //               room        -> string nama ruangan
 //               photoBuffer -> Buffer JPEG dari ESP32-CAM atau null
 // output : { status: "allowed"|"denied", message: string, face: object|null }
-//
-// flow:
-//   1. RFID lookup O(1) -> jika tidak ada: denied langsung
-//   2. cek masa berlaku + jadwal akses
-//   3. jika ada photo:
-//      - GCS upload (async, fire-and-forget)
-//      - face inference (sync, harus tunggu hasilnya)
-//      - jika face tidak match: denied
-//   4. jika tidak ada photo: skip face check, lanjut dengan RFID saja
-//   5. log + notif Telegram
 export const validateAccess = async (uid, room, photoBuffer = null) => {
-    // 1. RFID lookup - single query O(1) dengan HMAC hash + index
-    const user = await getDataUserByRfid(uid);
+    // 1. RFID lookup di tabel cards (Cek apakah kartu terdaftar)
+    const card = await getDataCardByRfid(uid);
 
-    if (!user) {
-        const msg = 'RFID tidak terdaftar di sistem';
+    if (!card) {
+        const msg = 'Kartu RFID tidak terdaftar di sistem';
         await logAccess(null, uid, 'denied', room, msg, null);
         await sendNotification(null, room, 'denied', msg);
         return { status: 'denied', message: msg, face: null };
@@ -79,15 +71,33 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
     const today       = nowWIB.toISOString().split('T')[0];
     const currentTime = nowWIB.toISOString().slice(11, 16); // HH:MM
 
-    // 2. cek masa berlaku kartu
+    // 2. Cek masa berlaku / status blokir kartu
+    if (card.valid_until && today > card.valid_until) {
+        const isBlocked = card.valid_until === '1970-01-01';
+        const msg = isBlocked ? 'Kartu RFID diblokir oleh administrator' : 'Kartu RFID telah kadaluarsa';
+        await logAccess(null, uid, 'denied', room, msg, null);
+        await sendNotification(null, room, 'denied', msg);
+        return { status: 'denied', message: msg, face: null };
+    }
+
+    // 3. Cek apakah kartu dikaitkan dengan user
+    const user = await getDataUserByRfid(uid);
+    if (!user) {
+        const msg = 'Kartu RFID belum dikaitkan dengan pengguna';
+        await logAccess(null, uid, 'denied', room, msg, null);
+        await sendNotification(null, room, 'denied', msg);
+        return { status: 'denied', message: msg, face: null };
+    }
+
+    // 4. Cek masa berlaku user
     if (user.valid_until && today > user.valid_until) {
-        const msg = 'Kartu RFID telah kadaluarsa';
+        const msg = 'Masa berlaku akun pengguna telah habis';
         await logAccess(user.id, uid, 'denied', room, msg, null);
         await sendNotification(user, room, 'denied', msg);
         return { status: 'denied', message: msg, face: null };
     }
 
-    // 3. cek jadwal akses
+    // 5. Cek jadwal akses user
     if (currentTime < user.schedule_start || currentTime > user.schedule_end) {
         const msg = 'Akses ditolak di luar jadwal operasional';
         await logAccess(user.id, uid, 'denied', room, msg, null);
@@ -95,17 +105,32 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
         return { status: 'denied', message: msg, face: null };
     }
 
-    // 4. face check - hanya jika photo tersedia
+    // 6. face check - hanya jika photo tersedia DAN user memiliki wajah terdaftar di ML
     let faceResult = null;
+    let photoUrl = null;
 
-    if (photoBuffer) {
-        // GCS upload: async fire-and-forget - tidak perlu tunggu
-        uploadToGcs(photoBuffer, uid).catch(err =>
-            console.error('[GCS] Upload failed:', err.message)
-        );
+    let hasFaceEmbeddings = false;
+    if (user) {
+        try {
+            const faceEmbeds = await db.select({ id: faceEmbeddings.id })
+                .from(faceEmbeddings)
+                .where(eq(faceEmbeddings.user_id, user.id))
+                .limit(1);
+            hasFaceEmbeddings = faceEmbeds.length > 0;
+        } catch (err) {
+            console.error('[accessService] Gagal memeriksa face embeddings:', err.message);
+        }
+    }
+
+    if (photoBuffer && hasFaceEmbeddings) {
+        // GCS upload: await the upload to get the photo URL
+        try {
+            photoUrl = await uploadToGcs(photoBuffer, uid);
+        } catch (err) {
+            console.error('[GCS] Upload failed:', err.message);
+        }
 
         // face inference: sync - perlu hasil untuk keputusan akses
-        // photoBuffer perlu dikonversi jadi bentuk file object seperti dari req.file
         const photoFile = { buffer: photoBuffer, fieldname: 'photo', originalname: 'capture.jpg', mimetype: 'image/jpeg' };
         
         try {
@@ -118,7 +143,7 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
         if (faceResult === null) {
             // ML service tidak bisa dihubungi - tolak akses karena face check wajib jika photo ada
             const msg = 'Face verification gagal - ML service tidak tersedia';
-            await logAccess(user.id, uid, 'denied', room, msg, null);
+            await logAccess(user.id, uid, 'denied', room, msg, photoUrl);
             await sendNotification(user, room, 'denied', msg);
             return { status: 'denied', message: msg, face: null };
         }
@@ -126,18 +151,25 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
         if (!faceResult.matched) {
             // wajah tidak dikenali
             const msg = `Wajah tidak dikenali (similarity: ${faceResult.similarity?.toFixed(2) ?? 'N/A'} < ${FACE_MATCH_THRESHOLD})`;
-            await logAccess(user.id, uid, 'denied', room, msg, null);
+            await logAccess(user.id, uid, 'denied', room, msg, photoUrl);
             await sendNotification(user, room, 'denied', msg);
             return { status: 'denied', message: msg, face: faceResult };
         }
+    } else if (photoBuffer && !hasFaceEmbeddings) {
+        // User tidak memiliki wajah terdaftar (RFID-only), unggah foto untuk log saja tanpa verifikasi wajah
+        try {
+            photoUrl = await uploadToGcs(photoBuffer, uid);
+        } catch (err) {
+            console.error('[GCS] Upload failed:', err.message);
+        }
     }
 
-    // 5. semua check pass - akses diizinkan
-    const msg = photoBuffer
+    // 7. semua check pass - akses diizinkan
+    const msg = (photoBuffer && hasFaceEmbeddings)
         ? `Akses berhasil - RFID dan wajah terverifikasi (${faceResult?.person_name ?? 'unknown'})`
         : 'Akses berhasil diberikan (tanpa verifikasi wajah)';
 
-    await logAccess(user.id, uid, 'allowed', room, msg, null);
+    await logAccess(user.id, uid, 'allowed', room, msg, photoUrl);
     await sendNotification(user, room, 'allowed', msg);
     return { status: 'allowed', message: msg, face: faceResult };
 };

@@ -31,3 +31,15 @@ Time: ${time}
         console.error("Failed to send telegram notification", error);
     }
 };
+
+// function untuk mengirim pesan uji coba (ping) koneksi Telegram bot
+// input param : none
+// output      : void (melempar error jika bot tidak aktif)
+export const sendTestNotification = async () => {
+    if (!bot || !TELEGRAM_GROUP_ID) {
+        throw new Error("Telegram bot belum aktif atau TELEGRAM_GROUP_ID tidak dikonfigurasi.");
+    }
+    const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+    const message = `🔔 *Smart Room Access - Test Connection*\n\nKoneksi bot Telegram Anda ke server dashboard berhasil terjalin!\nWaktu Uji: ${time} WIB`;
+    await bot.sendMessage(TELEGRAM_GROUP_ID, message, { parse_mode: 'Markdown' });
+};

@@ -9,6 +9,9 @@ import { Router } from 'express';
 import multer from 'multer';
 import { sendError } from '../utils/response.js';
 import { registerFace, inferFace } from '../services/faceService.js';
+import { db } from '../database/sql.js';
+import { faceEmbeddings } from '../database/schema.js';
+import { eq } from 'drizzle-orm';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -88,6 +91,41 @@ router.post(
             return sendError(res, 500, `Internal Server Error: ${err.message}`);
         }
     },
+);
+
+// ========================================================================================
+// GET /api/v1/face/photos/:userId
+// ========================================================================================
+
+router.get(
+    '/photos/:userId',
+    async (req, res) => {
+        try {
+            const userId = parseInt(req.params.userId);
+            if (isNaN(userId)) {
+                return sendError(res, 400, 'userId harus berupa angka');
+            }
+
+            const results = await db.select({
+                photo_url: faceEmbeddings.photo_url,
+                photo_index: faceEmbeddings.photo_index
+            })
+            .from(faceEmbeddings)
+            .where(eq(faceEmbeddings.user_id, userId))
+            .orderBy(faceEmbeddings.photo_index);
+
+            const photos = results.map(r => r.photo_url).filter(Boolean);
+
+            return res.status(200).json({
+                success: true,
+                message: "User face registration photos retrieved successfully",
+                data: { photos }
+            });
+        } catch (err) {
+            console.error('[face/photos] error:', err.message);
+            return sendError(res, 500, `Internal Server Error: ${err.message}`);
+        }
+    }
 );
 
 export default router;
