@@ -7,6 +7,11 @@ import apiRoutes from "./src/routes/index.js";
 import { errorHandler } from "./src/middleware/errorHandler.js";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 // {
@@ -28,7 +33,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/v1", apiRoutes);
 
 app.get("/", (req, res) => {
-    res.send("Smart Room Access Server is running!");
+    res.sendFile(path.join(__dirname, "src", "views", "index.html"));
 });
 
 // Use global error handler
