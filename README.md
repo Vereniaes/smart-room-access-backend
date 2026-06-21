@@ -352,7 +352,8 @@ Ini adalah alur utama yang dipicu setiap kali ESP32 mengirimkan request tap kart
 flowchart TD
     A([ESP32 mengirim request\nPOST /api/v1/access]) --> B{Validasi\nX-API-KEY}
     B -->|Invalid| Z1([HTTP 401\nUnauthorized])
-    B -->|Valid| C[Lookup kartu di tabel cards\nHashRfid UID dengan HMAC-SHA256]
+    B -->|Valid| C1[Upload foto ke GCS jika ada]
+    C1 --> C[Lookup kartu di tabel cards\nHashRfid UID dengan HMAC-SHA256]
 
     C --> D{Kartu\nterdaftar?}
     D -->|Tidak| E([denied:\nKartu RFID tidak terdaftar])
@@ -373,8 +374,7 @@ flowchart TD
 
     N -->|Tidak keduanya| R([allowed:\nAkses diberikan tanpa\nverifikasi wajah])
 
-    N -->|Ya| O[Upload foto ke GCS\nasync fire-and-forget]
-    O --> P[Panggil ML service\nPOST /face/inference\nsync]
+    N -->|Ya| P[Panggil ML service\nPOST /face/inference\nsync]
 
     P --> Q{ML service\nberhasil?}
     Q -->|Gagal/timeout| S([denied:\nFace verification gagal])
