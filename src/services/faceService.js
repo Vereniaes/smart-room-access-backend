@@ -1,9 +1,9 @@
 // src/services/faceService.js
 //
 // -> handling API calls ke ML service dan operasi database untuk Face Recognition
-//    -> memanggil /face/register untuk ekstrak embedding
-//    -> memanggil /face/inference untuk ekstrak embedding dari 1 foto
-//    -> menggunakan pgvector untuk pencarian kemiripan (cosine similarity)
+//      -> memanggil /face/register untuk ekstrak embedding
+//      -> memanggil /face/inference untuk ekstrak embedding dari 1 foto
+//      -> menggunakan pgvector untuk pencarian kemiripan
 
 import axios from 'axios';
 import FormData from 'form-data';
@@ -11,7 +11,7 @@ import { eq, sql, desc } from 'drizzle-orm';
 import { db } from '../database/sql.js';
 import { faceEmbeddings, users } from '../database/schema.js';
 import { ML_SERVICE_URL } from '../../config/env.js';
-import { uploadToGcs } from '../utils/gcsUpload.js';
+import { uploadToGcs, deleteFromGcs } from '../utils/gcsUpload.js';
 
 const ML_BASE = ML_SERVICE_URL || 'http://localhost:8001';
 
@@ -44,8 +44,22 @@ async function forwardMultipart(files, fields, path) {
 
 // ------------------------------------------------------------------------------------------
 
-// Register Face: panggil ML API, simpan embedding ke database beserta GCS public URL
+// face registration replaced old photos
 export async function registerFace(personName, userId, photoFiles) {
+    // bersihkan foto lama di GCS dan DB sebelum daftar baru
+    const whereCondition = userId ? eq(faceEmbeddings.user_id, userId) : eq(faceEmbeddings.person_name, personName);
+    const existingRows = await db.select().from(faceEmbeddings).where(whereCondition);
+
+    for (const row of existingRows) {
+        if (row.photo_url) {
+            await deleteFromGcs(row.photo_url);
+        }
+    }
+
+    if (existingRows.length > 0) {
+        await db.delete(faceEmbeddings).where(whereCondition);
+    }
+
     // panggil ML service untuk mendapatkan 3 array embedding
     const mlResponse = await forwardMultipart(
         photoFiles,

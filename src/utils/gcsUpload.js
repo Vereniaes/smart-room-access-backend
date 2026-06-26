@@ -1,3 +1,9 @@
+// src/utils/gcsUpload.js
+//
+// -> handling upload dan hapus foto di Google Cloud Storage
+//      -> upload foto tap atau foto registrasi
+//      -> hapus foto lama saat daftar ulang
+
 import { Storage } from '@google-cloud/storage';
 import { GCP_BUCKET_NAME, GCP_CREDENTIALS } from '../../config/env.js';
 
@@ -44,3 +50,19 @@ export const uploadToGcs = async (buffer, uid) => {
     console.log(`[GCS] Uploaded: ${publicUrl}`);
     return publicUrl;
 };
+
+// delete old photo
+export const deleteFromGcs = async (photoUrl) => {
+    if (!photoUrl) return;
+    try {
+        const prefix = `https://storage.googleapis.com/${GCP_BUCKET_NAME}/`;
+        if (photoUrl.startsWith(prefix)) {
+            const filename = photoUrl.slice(prefix.length);
+            await bucket.file(filename).delete({ ignoreNotFound: true });
+            console.log(`[GCS] Deleted: ${filename}`);
+        }
+    } catch (err) {
+        console.error('[GCS] Delete error:', err.message);
+    }
+};
+
