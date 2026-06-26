@@ -6,6 +6,7 @@
 //    -> forward ke validateAccess service (RFID + face dual-factor)
 
 import multer from 'multer';
+import sharp from 'sharp';
 import { validateAccess }         from '../services/accessService.js';
 import { sendResponse, sendError } from '../utils/response.js';
 
@@ -27,8 +28,14 @@ export const handleAccessRequest = async (req, res) => {
             return sendError(res, 400, 'Missing required fields: uid or room');
         }
 
-        const photoBuffer = req.file ? req.file.buffer : null;
-        const result      = await validateAccess(uid, room, photoBuffer);
+        let photoBuffer = req.file ? req.file.buffer : null;
+
+        // rotate 180 - ESP32-CAM terpasang terbalik
+        if (photoBuffer) {
+            photoBuffer = await sharp(photoBuffer).rotate(180).toBuffer();
+        }
+
+        const result = await validateAccess(uid, room, photoBuffer);
 
         return sendResponse(
             res,

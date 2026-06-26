@@ -9,7 +9,7 @@
 
 import { sendResponse, sendError } from '../utils/response.js';
 import { checkDatabaseHealth, checkMlServiceHealth, getSystemMetrics, getConnectedDevices } from '../services/systemService.js';
-import { sendTestNotification } from '../services/notificationService.js';
+import { sendTestNotification } from '../services/botService.js';
 import { 
     TELEGRAM_BOT_TOKEN, 
     TELEGRAM_GROUP_ID, 

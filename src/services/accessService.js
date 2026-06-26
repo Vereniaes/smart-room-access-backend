@@ -13,7 +13,8 @@ import axios            from 'axios';
 import FormData         from 'form-data';
 import { db }           from '../database/sql.js';
 import { users, accessLogs, faceEmbeddings } from '../database/schema.js';
-import { sendNotification }  from './notificationService.js';
+import { sendNotification }  from './botService.js';
+import { emitAccessEvent }   from '../utils/socketServer.js';
 import { getDataUserByRfid } from './userService.js';
 import { getDataCardByRfid } from './cardService.js';
 import { uploadToGcs }       from '../utils/gcsUpload.js';
@@ -39,6 +40,8 @@ const logAccess = async (userId, uid, status, room, message, photoUrl = null) =>
             message,
             photo_url: photoUrl,
         });
+        // emit real-time event ke dashboard
+        emitAccessEvent({ user_id: userId || null, uid, status, room, message, photo_url: photoUrl, timestamp: new Date().toISOString() });
     } catch (error) {
         console.error('Gagal menambahkan log akses:', error);
     }

@@ -198,7 +198,7 @@ smart-room-access-backend/
 |   |   |-- cardService.js            # Query DB untuk entitas kartu RFID
 |   |   |-- logService.js             # Query DB untuk access log
 |   |   |-- faceService.js            # Panggil ML API + pgvector cosine similarity
-|   |   |-- notificationService.js    # Kirim notifikasi ke Telegram
+|   |   |-- botService.js             # Telegram bot (polling + 2-way commands + notifikasi akses)
 |   |   `-- systemService.js          # Health check DB, ML, metrik sistem, device list
 |   |
 |   |-- middleware/
@@ -214,6 +214,7 @@ smart-room-access-backend/
 |   `-- utils/
 |       |-- response.js               # Helper sendResponse() dan sendError() untuk format JSON seragam
 |       |-- gcsUpload.js              # Upload buffer foto ke GCP Cloud Storage, return public URL
+|       |-- socketServer.js           # Singleton Socket.IO wrapper - setIO, getIO, emitAccessEvent
 |       `-- rfidHash.js               # HMAC-SHA256 untuk hashing RFID UID sebelum disimpan ke DB
 |
 `-- migrations/                       # File SQL migrasi yang di-generate Drizzle Kit
@@ -574,7 +575,7 @@ graph LR
         S_CRD[cardService]
         S_LOG[logService]
         S_FACE[faceService]
-        S_NOT[notificationService]
+        S_NOT[botService]
         S_SYS[systemService]
     end
 
@@ -603,6 +604,8 @@ graph LR
     S_ACC --> S_FACE
     S_ACC --> S_NOT
     S_ACC --> GCS
+    S_NOT --> SK[socketServer]
+    S_SYS --> S_NOT
 
     S_CRD --> HASH
     S_USR --> HASH
