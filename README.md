@@ -42,7 +42,7 @@ Sistem mengelola empat fungsi utama:
 
 ### 1.2 Batasan Sistem
 
-- Server berjalan pada zona waktu UTC; seluruh validasi jadwal dikonversi secara manual ke WIB (UTC+7)
+- Server berjalan pada zona waktu Asia/Jakarta (WIB); pelaporan bot Telegram disesuaikan dengan zona waktu lokal
 - Layanan pengenalan wajah bersifat opsional - jika photo tidak disertakan dalam request, sistem tetap berfungsi dengan validasi RFID saja
 - Hanya pengguna dengan role `admin` atau `staff` yang diizinkan mengakses dasbor administrasi
 
@@ -366,7 +366,7 @@ flowchart TD
     H -->|Tidak ada user| I([denied:\nKartu belum dikaitkan pengguna])
 
     H -->|User ditemukan| J{Cek valid_until\nuser}
-    J -->|Kadaluarsa| K([denied:\nMasa berlaku akun habis])
+    J -->|Kadaluarsa atau\ndiblokir| K([denied:\nMasa berlaku habis / diblokir])
 
     J -->|Masih berlaku| L{Cek jadwal\nschedule_start dan end WIB}
     L -->|Di luar jadwal| M([denied:\nDi luar jadwal operasional])

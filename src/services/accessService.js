@@ -86,8 +86,9 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
 
     // 2. Cek masa berlaku / status blokir kartu
     if (card.valid_until && today > card.valid_until) {
+        // blocked by expiring the date
         const isBlocked = card.valid_until === '1970-01-01';
-        const msg = isBlocked ? 'Kartu RFID diblokir oleh administrator' : 'Kartu RFID telah kadaluarsa';
+        const msg = isBlocked ? 'blocked' : 'Kartu RFID telah kadaluarsa';
         await logAccess(null, uid, 'denied', room, msg, photoUrl);
         await sendNotification(null, room, 'denied', msg);
         return { status: 'denied', message: msg, face: null };
@@ -104,7 +105,9 @@ export const validateAccess = async (uid, room, photoBuffer = null) => {
 
     // 4. Cek masa berlaku user
     if (user.valid_until && today > user.valid_until) {
-        const msg = 'Masa berlaku akun pengguna telah habis';
+        // blocked by expiring the date
+        const isBlocked = user.valid_until === '1970-01-01';
+        const msg = isBlocked ? 'blocked' : 'Masa berlaku akun pengguna telah habis';
         await logAccess(user.id, uid, 'denied', room, msg, photoUrl);
         await sendNotification(user, room, 'denied', msg);
         return { status: 'denied', message: msg, face: null };

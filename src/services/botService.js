@@ -36,7 +36,7 @@ const formatAccessMessage = (user, room, status, accessTypeMessage, time) => {
 *Access Notification*
 👤 User: ${user ? user.name : 'Unknown User'}
 🚪 Room: ${room}
-ℹ️ Status: ${isDenied ? `Access Denied ❌\nReason: ${accessTypeMessage}` : 'Access Granted ✅'}
+ℹ️ Status: ${isDenied ? `Access Denied ❌\nReason: ${accessTypeMessage}` : `Access Granted ✅\nDetail: ${accessTypeMessage || 'Akses berhasil diberikan'}`}
 🕒 Time: ${time}
     `.trim();
 };
@@ -169,7 +169,7 @@ Here are the available commands:
             const isExpired = foundUser.valid_until && today > foundUser.valid_until;
 
             let statusText = 'Active ✅';
-            if (isBlocked) statusText = 'Blocked ⛔';
+            if (isBlocked) statusText = 'blocked ⛔';
             else if (isExpired) statusText = 'Expired ⚠️';
 
             const message = `
@@ -204,8 +204,8 @@ Here are the available commands:
             }
 
             const msgText = action === 'block'
-                ? `⛔ User *${updatedUser.name}* (ID: ${updatedUser.id}) telah di-*BLOCK*.`
-                : `✅ User *${updatedUser.name}* (ID: ${updatedUser.id}) telah di-*UNBLOCK*.`;
+                ? `⛔ User *${updatedUser.name}* (ID: ${updatedUser.id}) telah di-*blocked*.`
+                : `✅ User *${updatedUser.name}* (ID: ${updatedUser.id}) telah di-*unblocked*.`;
 
             bot.sendMessage(chatId, msgText, { parse_mode: 'Markdown' });
         } catch (error) {
@@ -220,12 +220,11 @@ Here are the available commands:
         try {
             const logs = await getAllLogs();
 
-            const nowWIB = new Date(Date.now() + 7 * 60 * 60 * 1000);
-            const todayStr = nowWIB.toISOString().split('T')[0];
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
 
             // filter log hari ini
             const todayLogs = logs.filter((log) => {
-                const logDate = new Date(log.access_time).toISOString().split('T')[0];
+                const logDate = new Date(log.access_time).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
                 return logDate === todayStr;
             });
 
@@ -258,7 +257,7 @@ Total Scans: ${total}
 
             let message = `📋 *Last 5 Access Logs*\n\n`;
             recent.forEach((log) => {
-                const time = new Date(log.access_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const time = new Date(log.access_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
                 const icon = log.status === 'allowed' ? '✅' : '❌';
                 message += `${icon} *${log.user_name || 'Unknown'}* -> ${log.room} at ${time}\n`;
             });
@@ -291,7 +290,7 @@ Total Scans: ${total}
 
             let message = `⚠️ *Recent Access Alerts (24h)*\n\n`;
             alerts.forEach((log) => {
-                const time = new Date(log.access_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const time = new Date(log.access_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
                 message += `❌ *${log.user_name || 'Unknown'}* -> ${log.room} at ${time}\n`;
             });
 
