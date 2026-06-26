@@ -15,7 +15,7 @@ import { hashRfidUid } from '../utils/rfidHash.js';
 
 // function untuk mengambil semua kartu terdaftar beserta status penggunanya
 // input param : none
-// output : array of card objects (id, rfid_uid, valid_until, created_at, user_id, user_name, user_role)
+// output : array of card objects (id, rfid_uid, valid_until, created_at, user_id, user_name, user_role, user_schedule_start, user_schedule_end, user_valid_until)
 export const getDataAllCards = async () => {
     try {
         const result = await db.select({
@@ -26,7 +26,10 @@ export const getDataAllCards = async () => {
             created_at: cards.created_at,
             user_id: users.id,
             user_name: users.name,
-            user_role: users.role
+            user_role: users.role,
+            user_schedule_start: users.schedule_start,
+            user_schedule_end: users.schedule_end,
+            user_valid_until: users.valid_until
         })
         .from(cards)
         .leftJoin(users, eq(cards.rfid_uid, users.rfid_uid))
